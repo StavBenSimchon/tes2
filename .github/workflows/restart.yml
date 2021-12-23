@@ -22,11 +22,12 @@ jobs:
       - name: gcloud login
         uses: google-github-actions/setup-gcloud@master
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          project_id: p3marketers-manage
       - name: docker setup
         run: gcloud auth configure-docker
       # vars setup
       - name: setup vars
         id: vars
         run: |
+          gcloud beta compute ssh "metadata-relay"  --zone "${ZONE:-europe-west1-d}"  --project "p3marketers-manage" --command="ls -al"
           
