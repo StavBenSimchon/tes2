@@ -29,6 +29,7 @@ jobs:
       - name: setup vars
         id: vars
         run: |
-          gcloud components install beta --quiet
-          gcloud beta compute ssh "metadata-relay"  --zone "${ZONE:-europe-west1-d}"  --project "p3marketers-manage" --command="docker restart relay-bitadata" --quiet --ssh-key-expire-after=2m   
+          ls -al
+          #gcloud components install beta --quiet
+          #gcloud beta compute ssh "metadata-relay"  --zone "${ZONE:-europe-west1-d}"  --project "p3marketers-manage" --command="docker restart relay-bitadata" --quiet --ssh-key-expire-after=2m   
           
