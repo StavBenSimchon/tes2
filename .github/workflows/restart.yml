@@ -19,7 +19,7 @@ jobs:
         id: gcloud-auth
         uses: google-github-actions/auth@main
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.GCP_BITADATA_SA_KEY }}
       - name: gcloud login
         uses: google-github-actions/setup-gcloud@master
         with:
@@ -30,7 +30,6 @@ jobs:
       - name: setup vars
         id: vars
         run: |
-          ls -al
-          #gcloud components install beta --quiet
-          #gcloud beta compute ssh "metadata-relay"  --zone "${ZONE:-europe-west1-d}"  --project "p3marketers-manage" --command="docker restart relay-bitadata" --quiet --ssh-key-expire-after=2m   
+          gcloud components install beta --quiet
+          gcloud beta compute ssh "metadata-relay"  --zone "${ZONE:-europe-west1-d}"  --project "p3marketers-manage" --command="ls -al ; whoami" --quiet --ssh-key-expire-after=2m   
           
