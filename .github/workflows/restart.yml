@@ -13,7 +13,8 @@ jobs:
   setup-build-publish:
     runs-on: ubuntu-latest
     steps:
-      # SETUP
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: gcloud auth
         id: gcloud-auth
         uses: google-github-actions/auth@main
