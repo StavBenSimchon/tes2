@@ -30,8 +30,6 @@ jobs:
         id: vars
         run: |
           mkdir -p ~/.ssh/
-          cat $SSH_PRIV > /home/runner/.ssh/google_compute_engine 
-          cat $SSH_PUB > /home/runner/.ssh/google_compute_engine.pub
           gcloud components install beta --quiet
-          gcloud beta compute ssh "metadata-relay"  --zone "${ZONE:-europe-west1-d}"  --project "p3marketers-manage" --command="ls -al" --quiet || (cat /home/runner/.ssh/google_compute_engine && cat /home/runner/.ssh/google_compute_engine.pub)
+          gcloud beta compute ssh "metadata-relay"  --zone "${ZONE:-europe-west1-d}"  --project "p3marketers-manage" --command="ls -al" --quiet --ssh-key-expiration=5m   
           
