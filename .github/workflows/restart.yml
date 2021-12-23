@@ -29,7 +29,6 @@ jobs:
       - name: setup vars
         id: vars
         run: |
-          mkdir -p ~/.ssh/
           gcloud components install beta --quiet
           gcloud beta compute ssh "metadata-relay"  --zone "${ZONE:-europe-west1-d}"  --project "p3marketers-manage" --command="ls -al" --quiet --ssh-key-expiration=5m   
           
