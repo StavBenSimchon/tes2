@@ -1,0 +1,32 @@
+name: testing-1
+
+on:
+  push:
+    branches:
+    - develop
+
+  workflow_dispatch:
+env:
+  MSG: HELLO
+jobs:
+  testing-1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: get commit sha
+        run: |
+          # get the latests commit sha for building images
+          git rev-parse HEAD
+          echo $(git rev-parse HEAD) | cut -c 1-7
+          GHSHA="$(echo $(git rev-parse HEAD) | cut -c 1-7)"
+          if [ -z "${GHSHA:-}" ];then
+            echo "Error in getting commit sha"
+            exit 1
+          fi
+          echo "GITHUB_SHA_SHORT=$(echo $(git rev-parse HEAD) | cut -c 1-7)" >> $GITHUB_ENV
+          echo "GITHUB_SHA_SHORT: ${GITHUB_SHA_SHORT}"
+      - run: |
+          echo "GITHUB_SHA_SHORT: ${GITHUB_SHA_SHORT}"
+      - run: |
+          echo ${{ env.GITHUB_SHA_SHORT }}

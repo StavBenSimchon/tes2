@@ -1,0 +1,32 @@
+name: Test
+
+on:
+  workflow_dispatch:
+
+
+env:
+  APP_IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/relay-bitadata
+  ENV_TAG: production
+  SLACK_CHANNEL: placeholder
+jobs:
+
+  setup-build-publish:
+    runs-on: ubuntu-latest
+    steps:
+      # SETUP
+      - name: gcloud auth
+        id: gcloud-auth
+        uses: google-github-actions/auth@main
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: gcloud login
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: docker setup
+        run: gcloud auth configure-docker
+      # vars setup
+      - name: setup vars
+        id: vars
+        run: |
+          

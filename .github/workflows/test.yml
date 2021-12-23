@@ -1,0 +1,46 @@
+name: test
+
+on:
+  workflow_dispatch:
+
+env:
+  IMAGE_TAG_ADD: intergration
+  JENKINS_INTEG_URL: 'https://130.211.58.18/view/CRM%20CI%20CD/job/CRM-AUTO/build\?token\='
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.skip.outputs.skip_f }}
+    steps:
+      - id: skip
+        run: |
+          echo ::set-output name=skip_f::false
+      - id: te
+        run: |
+          env
+
+      - name: testing1
+        if: steps.skip.outputs.skip_f == 'false'
+        id: test1
+        run: |
+          echo ">>${{steps.skip.outputs.skip_f}}"
+  tes:
+    needs: test
+    if: needs.test.outputs.skip == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: |
+          if [ -z "${{ needs.tet.outputs.o1 }}" ];then
+            echo empty
+          fi
+          echo ">>${{ needs.tet.outputs.o1 }}"
+  tes2:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: |
+          echo ">>${{needs.test.outputs.skip}}"
+

@@ -1,0 +1,191 @@
+name: CI
+
+on:
+  # workflow_run:
+  #   workflows: ["CI build"]
+  #   types:
+  #     - completed
+  push:
+    branches: 
+    - integration
+  # pull_request:
+  #   types: 
+  #   - closed
+  #   branches:
+  #   - integration
+
+  workflow_dispatch:
+    inputs:
+      testid:
+        description: 'test'     
+        required: true
+        default: 'test'
+
+jobs:
+  setup-build-publish:
+    runs-on: ubuntu-latest
+    env:
+      # PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      DEPLOYMENT_NAME: crm-app 
+      IMAGE_TAG_ADD: intergration
+      APP_IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/crm-app
+      FRONTEND_IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/crm-frontend
+    steps:
+      # - name: test if merged
+      #   id: merged
+      #   if: github.event == 'pull_request' &&  github.event.pull_request.merged != true
+      #   run: |
+      #     echo ::set-output name=merged_flag::true
+      #     # exit 1
+      - uses: actions/checkout@v2
+      # make release notes
+
+      # - name: make release notes
+      #   run: |
+      #     sudo apt install jq
+      #     curl --request GET \
+      #     --user "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+      #     --url '${{ secrets.JIRA_BASE_URL }}/rest/agile/1.0/board/18/version?released=false' \
+      #     --header 'Accept: application/json' | jq '.values[0].name'
+
+# SETUP
+      - name: Login
+        # if: ${{ steps.merged.outputs.merged_flag }} == "true"
+        uses: atlassian/gajira-login@master
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - run: gcloud auth configure-docker
+      - name: vars
+        id: vars
+        run: |
+          set +e
+          echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
+          TICKET=$(echo "${{ github.event.head_commit.message }}" | egrep "^Merge" | egrep -o "CRM-[0-9]+")
+          if [ -z "${TICKET}" ]; then
+            echo ::set-output name=jira_ticket_f::false
+            echo "no ticket in commit"
+          else
+            echo ::set-output name=jira_ticket_f::true
+            echo ::set-output name=jira_ticket::${TICKET}
+            echo "commit from ticket: ${TICKET}"
+          fi
+
+      - name: Post to a Slack channel
+        uses: slackapi/slack-github-action@v1.14.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          payload: '{
+   "text": "test",
+   "channel": "#integration-releases"
+}'
+
+      # BUILD
+      - name: update release notes
+        if: ${{ steps.vars.outputs.jira_ticket_f == 'true' }} 
+        run: |
+          git config --global user.email "github@no-reply.copm"
+          git config --global user.name "Github Action"
+
+          LINE=""
+          sed -i '2i\'${LINE}'\' release_notes.md
+
+          git add -A 
+          git commit -m 'test'
+          git push
+      # - name: Build crm-app Docker image
+      #   run: |
+      #     cd app
+      #     docker build . -t ${APP_IMAGE_NAME}:${GITHUB_SHA_SHORT}
+
+      # - name: Push Docker image
+      #   run: docker push ${APP_IMAGE_NAME}:test
+
+      # - name: add tags
+      #   run: |
+      #     gcloud container images add-tag --quiet \
+      #         ${APP_IMAGE_NAME}:${GITHUB_SHA_SHORT} \
+      #         ${APP_IMAGE_NAME}:${IMAGE_TAG_ADD}
+
+
+      # - name: Build crm-frontend Docker image
+      #   run: docker build . -t ${FRONTEND_IMAGE_NAME}:${GITHUB_SHA_SHORT}
+
+      # - name: Push crm-frontend Docker image
+      #   run: docker push ${FRONTEND_IMAGE_NAME}:${GITHUB_SHA_SHORT}
+
+      # - name: add tags
+      #   run: |
+      #     gcloud container images add-tag --quiet \
+      #         ${FRONTEND_IMAGE_NAME}:${GITHUB_SHA_SHORT} \
+      #         ${FRONTEND_IMAGE_NAME}:${IMAGE_TAG_ADD}
+
+      # - name: Transition issue
+      #   if: ${{ steps.vars.outputs.jira_ticket_f == 'true' }} 
+      #   id: transition
+      #   uses: atlassian/gajira-transition@master
+      #   with:
+      #     issue: ${{ steps.vars.outputs.jira_ticket }} 
+      #     transition: "Integration"
+
+      # - name: Comment on issue
+      #   if: ${{ steps.vars.outputs.jira_ticket_f == 'true' }} 
+      #   uses: atlassian/gajira-comment@master
+      #   with:
+      #     issue: ${{ steps.vars.outputs.jira_ticket }} 
+      #     comment: "image pushed"
+
+  # DEPOY
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: google-github-actions/setup-gcloud@master
+  #       with:
+  #         project_id: ${{ secrets.GCP_INTEG_PROJECT_ID }}
+  #         service_account_key: ${{ secrets.GCP_INTEG_SA_KEY }}
+  #         export_default_credentials: true
+
+  #     - run: gcloud components install kubectl --quiet
+
+  #     - uses: google-github-actions/get-gke-credentials@v0.2.1
+  #       with:
+  #         cluster_name: ${{ secrets.GCP_INTEG_CLUSTER }}
+  #         location: ${{ secrets.GCP_INTEG_ZONE }}
+  #         project_id: ${{ secrets.GCP_INTEG_PROJECT_ID }}
+
+  #     - name: Use kubectl CLI
+  #       run: |
+  #         kubectl get deployment -l imagename=${DEPLOYMENT_NAME} -o name | while read deployment; do 
+  #           kubectl rollout restart ${deployment}
+  #         done
+  #         kubectl get deployments -l imagename=${DEPLOYMENT_NAME}
+
+  test:
+    needs: setup-build-publish
+    runs-on: ubuntu-latest
+    steps:
+      - run: env
+
+  success:
+    needs: test
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "succeed"
+
+  failed:
+    needs: test
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "failed"
+      - run: exit 1

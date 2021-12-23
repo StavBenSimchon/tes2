@@ -1,0 +1,77 @@
+# name: Test
+# on:
+# #   # schedule:
+# #   #   - cron:  '0 */2 * * *'
+#   push:
+#     branches: 
+#     - main 
+# #   pull_request:
+# #     branches: 
+# #     - main 
+
+# #   # Allows you to run this workflow manually from the Actions tab
+#   workflow_dispatch:
+
+# # # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#       - run: |
+#           git config --global user.email "github@no-reply.copm"
+#           git config --global user.name "Github Action"
+
+#           sed -i '2i\'${LINE}'\' release_notes.md
+
+#           git add -A 
+#           git commit -m 'test'
+#           git push
+#   build:
+#     runs-on: ubuntu-latest
+#     # container: { image: alpine }
+#     # steps:  
+#     # - run: uname -a
+#     # - run: cat /etc/alpine-release
+#     # - run: touch /hello
+#     # - run: ls /
+#     env:
+#       VERSION: ''
+#     steps:
+#       - name: init ubuntu
+#         run: sudo apt install jq
+#       - name: checkout
+#         uses: actions/checkout@v2
+#       - name: Testing
+#         uses: StavBenSimchon/gh-action-example@main
+#         with:
+#           is_ci: 'true'
+#           test_flag: 'true'
+#           who-to-greet: test
+#       - name: Run a one-line script
+#         run: echo Hello, world!
+#       - name: Run version
+#         run: |
+#           echo "VERSION=$(jq -er .version package.json)" >> $GITHUB_ENV
+#       - name: Run a multi-line script
+#         run: |
+#           echo $VERSION
+#           echo ${{ github }}
+#           echo ${{ github.event }}
+#           env
+#           echo Add other actions to build,
+#           echo test, and deploy your project.
+#       - name: Set up Cloud SDK
+#         uses: google-github-actions/setup-gcloud@master
+#         with:
+#           project_id: ${{ secrets.GCP_PROJECT_ID }}
+#           service_account_key: ${{ secrets.GCP_SA_KEY }}
+#           export_default_credentials: true
+#       - name: Build the Docker image
+#         run: |
+#           # docker login -u _json_key --password-stdin https://$INPUT_GCR_HOST/
+#           docker build . --file Dockerfile --tag my-image-name:$(date +%s) --build-arg NPM_AUTH_TOKEN="${{secrets.NPM_AUTH_TOKEN}}"
+#       - name: Analysis
+#         uses: docker://phpstan/phpstan
+#         with:
+#           args: analyze --error-format=table <code path>
