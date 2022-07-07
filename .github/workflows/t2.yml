@@ -1,0 +1,26 @@
+name: Test-2
+
+on:
+  # push:
+  #   branches: 
+  #   - develop
+  #   - master
+  # pull_request:
+  #   branches:
+  #   - master
+  #   - develop
+
+  workflow_dispatch:
+
+concurrency: 
+  group: ci
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          which docker
+          docker -version
+          docker run -d --name duckling rasa/duckling
+          curl http://localhost:8000 && echo ok
