@@ -22,4 +22,5 @@ jobs:
       - run: |
           docker run --name duckling --rm -v $PWD:/host rasa/duckling cp /usr/local/bin/duckling-example-exe /host/
           ./duckling-example-exe -p 8000 &
+          sleep 3
           curl -XPOST http://localhost:8000/parse --data 'locale=en_GB&text=tomorrow at eight'
